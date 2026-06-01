@@ -1,0 +1,74 @@
+import streamlit as st
+import datetime
+
+# 1. वेबसाइट का एकदम झकास डिज़ाइन सेट करना
+st.set_page_config(page_title="Jenil's Smart Cafe", page_icon="🍽️", layout="wide")
+
+# 2. 'Session State' - यह वेबसाइट को याद दिलाएगा कि ग्राहक ने क्या-क्या ऑर्डर किया है
+if 'order_cart' not in st.session_state:
+    st.session_state.order_cart = []
+
+# 3. होटल का मेन्यू और उनके दाम (Prices)
+menu = {
+    "🍕 Margherita Pizza": 299,
+    "🍔 Premium Veg Burger": 149,
+    "🍟 Peri Peri Fries": 99,
+    "☕ Cold Coffee w/ Ice Cream": 129,
+    "🍝 White Sauce Pasta": 249,
+    "🍰 Chocolate Brownie": 119
+}
+
+# --- UI DESIGN START ---
+st.title("🍽️ Jenil's Smart Cafe POS")
+st.markdown("---")
+
+# स्क्रीन को 2 हिस्सों में बांटना (Left में Menu, Right में Bill)
+col1, col2 = st.columns([2, 1])
+
+# --- LEFT COLUMN: MENU SECTION ---
+with col1:
+    st.header("📋 Digital Menu")
+    st.write("Click 'Add to Order' to select items.")
+    
+    # मेन्यू को लूप चलाकर स्क्रीन पर सुंदर तरीके से दिखाना
+    for item, price in menu.items():
+        # हर आइटम के लिए एक छोटी रो (Row) बनाना
+        c1, c2, c3 = st.columns([3, 1, 1])
+        c1.write(f"**{item}**")
+        c2.write(f"₹{price}")
+        if c3.button("➕ Add", key=item):
+            # बटन दबाते ही आइटम कार्ट में जुड़ जाएगा
+            st.session_state.order_cart.append({"Item": item, "Price": price})
+            st.rerun() # वेबसाइट को रिफ्रेश करना ताकि नया आइटम बिल में दिखे
+
+# --- RIGHT COLUMN: BILLING SECTION ---
+with col2:
+    st.header("🧾 Live Order Bill")
+    st.markdown("---")
+    
+    # अगर कार्ट में कुछ है, तो उसका बिल बनाना
+    if len(st.session_state.order_cart) > 0:
+        total_amount = 0
+        
+        # कार्ट के सारे आइटम दिखाना
+        for i, order in enumerate(st.session_state.order_cart):
+            st.write(f"{i+1}. {order['Item']} - **₹{order['Price']}**")
+            total_amount += order['Price']
+            
+        st.markdown("---")
+        
+        # टैक्स और टोटल कैलकुलेट करना
+        gst = round(total_amount * 0.05, 2)  # 5% GST
+        final_bill = total_amount + gst
+        
+        st.write(f"**Sub Total:** ₹{total_amount}")
+        st.write(f"**GST (5%):** ₹{gst}")
+        st.subheader(f"💰 Final Amount: ₹{final_bill}")
+        
+        # ऑर्डर क्लियर करने का बटन
+        if st.button("🗑️ Clear Order / New Customer", type="primary"):
+            st.session_state.order_cart = []
+            st.rerun()
+            
+    else:
+        st.info("🛒 Cart is empty. Please add items from the menu.")
